@@ -52,7 +52,7 @@ private:
     TrafficLightPhase _currentPhase;
 
     // typical behaviour methods
-    void cycleThroughPhases();
+    [[noreturn]] void cycleThroughPhases();
 
 
     // FP.4b : create a private member of type MessageQueue for messages of type TrafficLightPhase 

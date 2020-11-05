@@ -47,10 +47,40 @@ void TrafficLight::simulate()
 }
 
 // virtual function which is executed in a thread
-void TrafficLight::cycleThroughPhases()
+[[noreturn]] void TrafficLight::cycleThroughPhases()
 {
     // FP.2a : Implement the function with an infinite loop that measures the time between two loop cycles 
     // and toggles the current phase of the traffic light between red and green and sends an update method 
     // to the message queue using move semantics. The cycle duration should be a random value between 4 and 6 seconds. 
-    // Also, the while-loop should use std::this_thread::sleep_for to wait 1ms between two cycles. 
+    // Also, the while-loop should use std::this_thread::sleep_for to wait 1ms between two cycles.
+    std::random_device randomDevice;
+    std::mt19937 engine(randomDevice());
+    std::uniform_int_distribution<int> distribution(4000, 6000);
+
+    int cycleDuration = distribution(engine);
+
+    // need to track time the update actually occurred.  Set it to a time in the past so the update is
+    // performed initially without pause.
+    std::chrono::system_clock::time_point lastUpdatePerformed = std::chrono::system_clock::now();
+    lastUpdatePerformed = lastUpdatePerformed - std::chrono::seconds(100);
+
+    while (true)
+    {
+        // FP.2a requirement
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+        // get elapsed time since last update
+        long elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - lastUpdatePerformed).count();
+        if(elapsedTime >= cycleDuration)
+        {
+            // time to change the light color
+            _currentPhase = _currentPhase == TrafficLightPhase::red ? TrafficLightPhase::green : TrafficLightPhase::red;
+
+            // TODO : sends an update method to the message queue using move semantics
+
+            // select a new duration and set lastUpdatePerformed
+            cycleDuration = distribution(engine);
+            lastUpdatePerformed = std::chrono::system_clock::now();
+        }
+    }
 }
