@@ -61,7 +61,7 @@ void TrafficLight::simulate()
 }
 
 // virtual function which is executed in a thread
-void TrafficLight::cycleThroughPhases()
+[[noreturn]] void TrafficLight::cycleThroughPhases()
 {
     // FP.2a : Implement the function with an infinite loop that measures the time between two loop cycles 
     // and toggles the current phase of the traffic light between red and green and sends an update method 
@@ -69,13 +69,14 @@ void TrafficLight::cycleThroughPhases()
     // Also, the while-loop should use std::this_thread::sleep_for to wait 1ms between two cycles.
     std::random_device randomDevice;
     std::mt19937 engine(randomDevice());
-    std::uniform_int_distribution<int> distribution(4, 6);
+    std::uniform_int_distribution<long> distribution(4000000, 6000000);
 
-    int cycleDuration = distribution(engine);
+    long cycleDuration = distribution(engine);
 
     // need to track time the update actually occurred.  Set it to a time in the past so the update is
     // performed initially without pause.
     std::chrono::system_clock::time_point lastUpdatePerformed = std::chrono::system_clock::now();
+    lastUpdatePerformed = lastUpdatePerformed - std::chrono::seconds(4);
 
     while (true)
     {
@@ -83,7 +84,7 @@ void TrafficLight::cycleThroughPhases()
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
         // get elapsed time since last update
-        long elapsedTime = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - lastUpdatePerformed).count();
+        long elapsedTime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - lastUpdatePerformed).count();
         if(elapsedTime >= cycleDuration)
         {
             // time to change the light color
@@ -92,7 +93,7 @@ void TrafficLight::cycleThroughPhases()
 
             // TODO : sends an update method to the message queue using move semantics
             messageQueue.send(std::move( _currentPhase));
-
+            cycleDuration = distribution(engine);
             lastUpdatePerformed = std::chrono::system_clock::now();
         }
     }

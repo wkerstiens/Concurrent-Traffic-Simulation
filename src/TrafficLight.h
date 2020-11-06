@@ -57,7 +57,7 @@ private:
     TrafficLightPhase _currentPhase;
 
     // typical behaviour methods
-    void cycleThroughPhases();
+    [[noreturn]] void cycleThroughPhases();
 
 
     // FP.4b : create a private member of type MessageQueue for messages of type TrafficLightPhase 
@@ -65,8 +65,7 @@ private:
     // send in conjunction with move semantics.
     // std::shared_ptr<MessageQueue<TrafficLightPhase>> messageQueue;
     MessageQueue<TrafficLightPhase> messageQueue;
-    std::condition_variable _condition;
-    std::mutex _mutex;
+
 };
 
 #endif
