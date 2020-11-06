@@ -15,7 +15,7 @@ T MessageQueue<T>::receive()
     _conditionVariable.wait(lock, [this] { return !_queue.empty(); });
 
     T nextMessage = std::move(_queue.back());  // _queue.end is an iterator thing
-    _queue.pop_back();
+    _queue.clear();
     return nextMessage;
 }
 
@@ -25,7 +25,7 @@ void MessageQueue<T>::send(T &&msg)
     // FP.4a : The method send should use the mechanisms std::lock_guard<std::mutex> 
     // as well as _condition.notify_one() to add a new message to the queue and afterwards send a notification.
     std::lock_guard<std::mutex> lock(messageQueueMutex);
-    _queue.push_front(std::move(msg));
+    _queue.push_back(std::move(msg));
     _conditionVariable.notify_one();
 }
 
@@ -41,10 +41,11 @@ void TrafficLight::waitForGreen()
     // FP.5b : add the implementation of the method waitForGreen, in which an infinite while-loop 
     // runs and repeatedly calls the receive function on the message queue. 
     // Once it receives TrafficLightPhase::green, the method returns.
-
     while (true)
     {
-        if(messageQueue.receive() == TrafficLightPhase::green) return;
+        if(messageQueue.receive() == TrafficLightPhase::green) {
+            return;
+        }
     }
 }
 
@@ -90,8 +91,7 @@ void TrafficLight::cycleThroughPhases()
             else _currentPhase = red;
 
             // TODO : sends an update method to the message queue using move semantics
-            auto message = _currentPhase;
-            messageQueue.send(std::move(message));
+            messageQueue.send(std::move( _currentPhase));
 
             lastUpdatePerformed = std::chrono::system_clock::now();
         }
